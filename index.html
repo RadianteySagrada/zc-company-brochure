@@ -912,4 +912,102 @@
         <div>
           <div class="final-banner-text">¿Listo para iniciar su proyecto?</div>
           <div class="final-banner-sub">Solicite una cotización sin compromiso — respondemos en 24 horas.</div>
-        </d
+        </div>
+          <a href="#" class="final-banner-cta" onclick="downloadPDF();return false;">SOLICITAR COTIZACIÓN</a>
+        </div>
+    </div>  <!-- /.contact-section -->
+  </div>  <!-- /.page-inner -->
+</div>  <!-- /.page (p3) -->
+
+<!-- ══ BOTÓN FLOTANTE DE DESCARGA PDF ══ -->
+<button id="pdf-btn" onclick="downloadPDF()" title="Descargar Brochure PDF">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+  <span>Descargar PDF</span>
+</button>
+
+<style>
+  #pdf-btn {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--gold) 0%, #A07A30 100%);
+    color: var(--dark);
+    border: none;
+    border-radius: 50px;
+    padding: 14px 26px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 8px 32px rgba(201,168,76,0.40), 0 2px 8px rgba(0,0,0,0.4);
+    z-index: 9999;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  #pdf-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(201,168,76,0.55), 0 4px 12px rgba(0,0,0,0.5);
+  }
+  #pdf-btn:active { transform: translateY(0); }
+
+  @media print {
+    #pdf-btn { display: none !important; }
+  }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+3To5m+GOsO2bS4vOakCdq3Qch0FDrrA9WEwCyA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+  function downloadPDF() {
+    var btn = document.getElementById('pdf-btn');
+    var origHTML = btn.innerHTML;
+    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Generando...</span>';
+    btn.disabled = true;
+
+    var opt = {
+      margin:      0,
+      filename:    'ZC-Company-Brochure.pdf',
+      image:       { type: 'jpeg', quality: 0.97 },
+      html2canvas: {
+        scale:       2,
+        useCORS:     true,
+        logging:     false,
+        width:       794,
+        windowWidth: 794
+      },
+      jsPDF:       { unit: 'px', format: [794, 1123], orientation: 'portrait' },
+      pagebreak:   { mode: ['css', 'legacy'], before: '.page-break-before', after: '.cover, .page' }
+    };
+
+    html2pdf()
+      .set(opt)
+      .from(document.body)
+      .toPdf()
+      .get('pdf')
+      .then(function(pdf) {
+        // Keep only first 3 pages
+        var totalPages = pdf.internal.getNumberOfPages();
+        for (var i = totalPages; i > 3; i--) {
+          pdf.deletePage(i);
+        }
+        pdf.save('ZC-Company-Brochure.pdf');
+      })
+      .catch(function() {
+        html2pdf().set(opt).from(document.body).save();
+      })
+      .finally(function() {
+        btn.innerHTML = origHTML;
+        btn.disabled = false;
+      });
+  }
+</script>
+</body>
+</html>
