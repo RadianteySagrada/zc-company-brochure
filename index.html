@@ -991,17 +991,21 @@
       for (var i = 0; i < pages.length; i++) {
         if (i > 0) pdf.addPage([PAGE_W, PAGE_H], 'portrait');
 
-        var canvas = await html2canvas(pages[i], {
+        var el = pages[i];
+        var naturalH = el.scrollHeight;
+
+        var canvas = await html2canvas(el, {
           scale:       2,
           useCORS:     true,
           logging:     false,
           width:       PAGE_W,
-          height:      PAGE_H,
+          height:      naturalH,
           windowWidth: PAGE_W,
           scrollX:     0,
-          scrollY:     -window.scrollY
+          scrollY:     0
         });
 
+        // Escalar para que toda la página quepa en el A4 sin cortes
         var imgData = canvas.toDataURL('image/jpeg', 0.97);
         pdf.addImage(imgData, 'JPEG', 0, 0, PAGE_W, PAGE_H);
       }
