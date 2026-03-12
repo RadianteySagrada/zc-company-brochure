@@ -963,50 +963,57 @@
   }
 </style>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+3To5m+GOsO2bS4vOakCdq3Qch0FDrrA9WEwCyA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script>
-  function downloadPDF() {
+  async function downloadPDF() {
     var btn = document.getElementById('pdf-btn');
     var origHTML = btn.innerHTML;
     btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Generando...</span>';
     btn.disabled = true;
 
-    var opt = {
-      margin:      0,
-      filename:    'ZC-Company-Brochure.pdf',
-      image:       { type: 'jpeg', quality: 0.97 },
-      html2canvas: {
-        scale:       2,
-        useCORS:     true,
-        logging:     false,
-        width:       794,
-        windowWidth: 794
-      },
-      jsPDF:       { unit: 'px', format: [794, 1123], orientation: 'portrait' },
-      pagebreak:   { mode: ['css', 'legacy'], before: '.page-break-before', after: '.cover, .page' }
-    };
+    try {
+      var PAGE_W = 794;
+      var PAGE_H = 1123;
 
-    html2pdf()
-      .set(opt)
-      .from(document.body)
-      .toPdf()
-      .get('pdf')
-      .then(function(pdf) {
-        // Keep only first 3 pages
-        var totalPages = pdf.internal.getNumberOfPages();
-        for (var i = totalPages; i > 3; i--) {
-          pdf.deletePage(i);
-        }
-        pdf.save('ZC-Company-Brochure.pdf');
-      })
-      .catch(function() {
-        html2pdf().set(opt).from(document.body).save();
-      })
-      .finally(function() {
-        btn.innerHTML = origHTML;
-        btn.disabled = false;
+      // Seleccionar las 3 páginas en orden
+      var pages = Array.from(document.querySelectorAll('.cover, .page')).slice(0, 3);
+
+      var { jsPDF } = window.jspdf;
+      var pdf = new jsPDF({
+        unit: 'px',
+        format: [PAGE_W, PAGE_H],
+        orientation: 'portrait',
+        hotfixes: ['px_scaling']
       });
+
+      for (var i = 0; i < pages.length; i++) {
+        if (i > 0) pdf.addPage([PAGE_W, PAGE_H], 'portrait');
+
+        var canvas = await html2canvas(pages[i], {
+          scale:       2,
+          useCORS:     true,
+          logging:     false,
+          width:       PAGE_W,
+          height:      PAGE_H,
+          windowWidth: PAGE_W,
+          scrollX:     0,
+          scrollY:     -window.scrollY
+        });
+
+        var imgData = canvas.toDataURL('image/jpeg', 0.97);
+        pdf.addImage(imgData, 'JPEG', 0, 0, PAGE_W, PAGE_H);
+      }
+
+      pdf.save('ZC-Company-Brochure.pdf');
+    } catch(e) {
+      console.error('PDF error:', e);
+      alert('Error al generar el PDF. Por favor intente de nuevo.');
+    } finally {
+      btn.innerHTML = origHTML;
+      btn.disabled = false;
+    }
   }
 </script>
 </body>
